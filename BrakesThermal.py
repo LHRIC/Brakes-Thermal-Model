@@ -13,14 +13,13 @@ def brake_energy_single_maneuver(m_car, I_wheels, v1, v2, drag=0.0, distance=0.0
     dE_trans = 0.5 * m_car * (v1**2 - v2**2)
     
     # Rotational kinetic energy, assuming wheel speed = vehicle speed / R (but 
-    # if you have an effective rolling radius, you can incorporate that into I_wheels):
     #   omega = v / r, so (omega1^2 - omega2^2) = (v1^2 - v2^2)/r^2
     #   => 0.5 * I_wheels * (v1^2 - v2^2)/r^2
     # For simplicity, we assume I_wheels is "adjusted" for the direct velocity reference:
     dE_rot = 0.5 * I_wheels * (v1**2 - v2**2)
     
-    # Subtract aerodynamic drag (if you have that info)
-    dE_drag = drag * distance  # simplistic placeholder
+    # Subtract aerodynamic drag 
+    dE_drag = drag * distance  # placeholder
     
     return dE_trans + dE_rot - dE_drag
 
@@ -60,7 +59,7 @@ def lumped_brake_temp_sim(
     # portion to disc
     dE_disc = p * dE_one
 
-    # We'll do an explicit Euler approach, stepping through each brake/cool cycle
+    # explicit Euler approach, stepping through each brake/cool cycle
     # total time for 1 cycle:
     #   brake_time + cool_time
     n_cycles = n_brakings
@@ -72,8 +71,6 @@ def lumped_brake_temp_sim(
     T_array = np.zeros_like(t_array)
     T_array[0] = T_init  # start rotor temperature
 
-    # We'll keep track of whether we are "braking" or "cooling" at each moment
-    # to apply the correct power input
     idx_max = len(t_array) - 1
 
     # Heat capacity (J/K) for the disc
@@ -81,22 +78,19 @@ def lumped_brake_temp_sim(
 
     for i in range(idx_max):
         T_current = T_array[i]
-        # figure out which cycle we are in
-        cycle_index = int(np.floor(t_array[i] / cycle_time))  # 0..n_brakings-1
+        cycle_index = int(np.floor(t_array[i] / cycle_time)) 
         time_in_cycle = t_array[i] - cycle_index*cycle_time
 
-        # Decide if we are in braking phase or cooling
+        # braking phase or cooling
         if time_in_cycle < brake_time and cycle_index < n_brakings:
-            # We are in "braking" portion
-            # approximate constant power input over the brake_time
-            # Power_in = dE_disc / brake_time
+            # "braking" 
             Q_in = (dE_disc / brake_time)
         else:
-            Q_in = 0.0  # no friction heating
+            Q_in = 0.0  
 
-        # Cooling (convection + optional radiation)
+        # Cooling (convection + radiation)
         # Q_conv = h*A*(Trotor - Tamb)
-        Q_conv = h_conv * A_disc * ((T_current+273.15) - (T_amb+273.15))  # in Kelvin for clarity if you prefer
+        Q_conv = h_conv * A_disc * ((T_current+273.15) - (T_amb+273.15))  # in Kelvin 
         if Q_conv < 0:
             Q_conv = 0  # if rotor < ambient, reverse sign is possible; for simple model, clamp or let it go negative
 
@@ -122,7 +116,6 @@ def lumped_brake_temp_sim(
 
     return t_array, T_array
 
-# ------------------- MAIN SCRIPT EXAMPLE ---------------------------------
 if __name__ == "__main__":
     # Run the simulation
     t, T = lumped_brake_temp_sim(
@@ -145,7 +138,7 @@ if __name__ == "__main__":
         dt=0.1
     )
 
-    # Plot the resulting temperature curve
+    # Plot 
     plt.figure(figsize=(10,6))
     plt.plot(t, T, label="Rotor Temperature (°C)")
     plt.title("Brake Rotor Temperature - Lumped Model (100 Braking Maneuvers)")
@@ -155,6 +148,5 @@ if __name__ == "__main__":
     plt.legend()
     plt.show()
 
-    # Print peak temperature:
     peak_temp = np.max(T)
     print(f"Peak rotor temperature: {peak_temp:.1f} °C at t={t[np.argmax(T)]:.1f} s")
