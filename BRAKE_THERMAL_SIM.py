@@ -4,10 +4,16 @@ import matplotlib.pyplot as plt
 def get_material_properties(mat_type, T_c):
     """
     Returns (rho_metal, k_metal, Cp_metal) for a given material type and temperature T_c (°C)
-    ADD DEFINITIONS AS NEEDED.
+    Material types:
+    1: AISI 410 stainless-steel
+    2: AISI 4130 annealed steel
+    3: Aluminum alloy
+    4: Titanium alloy
+    5: Carbon steel
+    6: Cast Iron
+    7: 4140 steel (normalized)
     """
     if mat_type == 1:
-        # AISI 410 stainless-steel
         rho_metal = 7740  # kg/m^3
         if T_c < 100.0:
             k_metal  = 24.9        # [W/m-K]
@@ -17,12 +23,37 @@ def get_material_properties(mat_type, T_c):
             Cp_metal = 0.1 * T_c + 450.0
 
     elif mat_type == 2:
-        # AISI 4130 annealed steel
         rho_metal = 7850  # kg/m^3
-        k_metal  = 36.32  # [W/m-K]
-        Cp_metal = 600.0  # [J/kg-K]
+        k_metal  = (0.00008980370684893290 * T_c + 0.20061671922950300000) * 100  # [W/m-K]
+        Cp_metal = (0.00004814992250246590 * T_c + 0.11139284204593500000) * 4184  # [J/kg-K]
+
+    elif mat_type == 3:
+        rho_metal = 2760  # kg/m^3
+        k_metal   = 180.0  # [W/m-K]
+        Cp_metal  = 950.0  # [J/kg-K]
+
+    elif mat_type == 4:
+        rho_metal = 4420  # kg/m^3
+        k_metal   = 6.7    # [W/m-K]
+        Cp_metal  = 526.0  # [J/kg-K]
+
+    elif mat_type == 5:
+        rho_metal = 7850  # kg/m^3
+        k_metal   = 49.8   # [W/m-K]
+        Cp_metal  = 502.0  # [J/kg-K]
+
+    elif mat_type == 6:
+        rho_metal = 7150  # kg/m^3
+        k_metal   = 53.3   # [W/m-K]
+        Cp_metal  = 490.0  # [J/kg-K]
+
+    elif mat_type == 7:
+        rho_metal = 7850  # kg/m^3
+        k_metal   = 42.2   # [W/m-K] at 200°C
+        Cp_metal  = 519.0  # [J/kg-K] at ~375°C
 
     else:
+        # Default properties
         rho_metal = 7800.0
         k_metal   = 40.0
         Cp_metal  = 500.0
@@ -165,7 +196,11 @@ def simulate_multiple_rotors(rotor_pairs, events, ambient_temp, time_step):
             # rotational KE difference
             dE = compute_brake_energy(rotor["I_wheel"], omega_i, omega_f)
             # fraction going into the disc
-            fraction_disc = rotor["fraction_into_disc"]
+            torque_ratio = .703
+            fraction_disc = 0.9 * (torque_ratio if rotor_idx == 0 else (1 - torque_ratio))
+
+
+            fraction_disc *= 2
             # power spread out over t_brake
             if t_brake > 0.0:
                 brake_power[i] = (dE * fraction_disc) / t_brake
@@ -210,7 +245,6 @@ if __name__ == "__main__":
             {
                 "mass_disc": 0.5289,
                 "area_disc": 0.055,
-                "fraction_into_disc": 0.9,
                 "I_wheel": 5.0213,
                 "emissivity": 0.6,
                 "material_type": 2  # AISI 4130
@@ -218,7 +252,6 @@ if __name__ == "__main__":
             {
                 "mass_disc": 0.3778,
                 "area_disc": 0.0347,
-                "fraction_into_disc": 0.9,
                 "I_wheel": 3.542,
                 "emissivity": 0.6,
                 "material_type": 2  # AISI 4130
@@ -226,20 +259,98 @@ if __name__ == "__main__":
         ],
         [
             {
-                "mass_disc": 0.500,
-                "area_disc": 0.050,
-                "fraction_into_disc": 0.9,
+                "mass_disc": 0.5289,
+                "area_disc": 0.055,
                 "I_wheel": 4.8,
                 "emissivity": 0.75,
-                "material_type": 1  #AISI 410
+                "material_type": 1  # AISI 410
             },
             {
-                "mass_disc": 0.360,
-                "area_disc": 0.033,
-                "fraction_into_disc": 0.9,
+                "mass_disc": 0.3778,
+                "area_disc": 0.0347,
                 "I_wheel": 3.4,
                 "emissivity": 0.75,
                 "material_type": 1  # AISI 410
+            }
+        ],
+        [
+            {
+                "mass_disc": 0.5289,
+                "area_disc": 0.055,
+                "I_wheel": 5.0,
+                "emissivity": 0.1,
+                "material_type": 3  # Aluminum alloy
+            },
+            {
+                "mass_disc": 0.3778,
+                "area_disc": 0.0347,
+                "I_wheel": 3.5,
+                "emissivity": 0.1,
+                "material_type": 3  # Aluminum alloy
+            }
+        ],
+        [
+            {
+                "mass_disc": 0.5289,
+                "area_disc": 0.055,
+                "I_wheel": 5.2,
+                "emissivity": 0.3,
+                "material_type": 4  # Titanium alloy
+            },
+            {
+                "mass_disc": 0.3778,
+                "area_disc": 0.0347,
+                "I_wheel": 3.6,
+                "emissivity": 0.3,
+                "material_type": 4  # Titanium alloy
+            }
+        ],
+        [
+            {
+                "mass_disc": 0.5289,
+                "area_disc": 0.055,
+                "I_wheel": 5.4,
+                "emissivity": 0.9,
+                "material_type": 5  # Carbon steel
+            },
+            {
+                "mass_disc": 0.3778,
+                "area_disc": 0.0347,
+                "I_wheel": 3.7,
+                "emissivity": 0.9,
+                "material_type": 5  # Carbon steel
+            }
+        ],
+        [
+            {
+                "mass_disc": 0.5289,
+                "area_disc": 0.055,
+                "I_wheel": 5.6,
+                "emissivity": 0.95,
+                "material_type": 6  # Cast Iron
+            },
+            {
+                "mass_disc": 0.3778,
+                "area_disc": 0.0347,
+                "I_wheel": 3.8,
+                "emissivity": 0.95,
+                "material_type": 6  # Cast Iron
+            }
+        ],
+        [
+            {
+                "mass_disc": 0.5289,
+                "area_disc": 0.055,
+                "I_wheel": 5.6,
+                "emissivity": 0.95,
+                "material_type": 7  # 4140
+            },
+            {
+                "mass_disc": 0.3778,
+                "area_disc": 0.0347,
+                "I_wheel": 3.8,
+                "emissivity": 0.95,
+                "material_type": 7  # 4140
             }
         ]
     ]
@@ -268,19 +379,43 @@ if __name__ == "__main__":
         rotor_pairs, events, ambient_temp, time_step
     )
 
-    # analyze peak temperatures
-    for i in range(len(rotor_temps)):
+    material_names = {
+        1: "Stainless Steel (AISI 410)",
+        2: "Stainless Steel (AISI 4130)",
+        3: "Aluminum Sinter",
+        4: "Titanium alloy (Ti6Al4)",
+        5: "Carbon steel (AISI 1060)",
+        6: "Cast Iron (ASTM 40)",
+        7: "Steel Normalized (AISI 4140)"
+    }
+
+    # Analyze peak temperatures - split by front and rear
+    print("=== Front Rotors ===")
+    for i in range(0, len(rotor_temps), 2):  # even indices -> front rotors
         peak_temp = np.max(rotor_temps[i, :])
         peak_t_idx = np.argmax(rotor_temps[i, :])
         peak_time = time_array[peak_t_idx]
-        print(f"[Rotor {i+1}] Peak Temp: {peak_temp:.1f} °C ("
-              f"{peak_temp*9/5+32:.1f} °F) at t={peak_time:.1f}s")
 
-    material_names = {
-        1: "AISI 410",
-        2: "AISI 4130",
-        # Add more if needed
-    }
+        pair_idx, rotor_idx = divmod(i, 2)
+        rotor_info = rotor_pairs[pair_idx][rotor_idx]
+        mat_type = rotor_info["material_type"]
+        mat_name = material_names.get(mat_type, f"Material {mat_type}")
+
+        print(f"[{mat_name}] Peak Temp: {peak_temp:.1f} °C ({peak_temp * 9/5 + 32:.1f} °F) at t={peak_time:.1f}s")
+
+    print("\n=== Rear Rotors ===")
+    for i in range(1, len(rotor_temps), 2):  # odd indices -> rear rotors
+        peak_temp = np.max(rotor_temps[i, :])
+        peak_t_idx = np.argmax(rotor_temps[i, :])
+        peak_time = time_array[peak_t_idx]
+
+        pair_idx, rotor_idx = divmod(i, 2)
+        rotor_info = rotor_pairs[pair_idx][rotor_idx]
+        mat_type = rotor_info["material_type"]
+        mat_name = material_names.get(mat_type, f"Material {mat_type}")
+
+        print(f"[{mat_name}] Peak Temp: {peak_temp:.1f} °C ({peak_temp * 9/5 + 32:.1f} °F) at t={peak_time:.1f}s")
+
 
     # Plot
     fig, axarr = plt.subplots(3, 1, gridspec_kw={'height_ratios': [3, 3, 1]}, sharex=True)
